@@ -1,0 +1,27 @@
+From d2c27e74a69738e1ccbff965f578237dfb9888ef Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Sun, 2 Jun 2013 18:16:29 +0200
+Subject: [PATCH 4/9] Converted Quartz to MySQL
+
+---
+ pentaho-solutions/system/quartz/quartz.properties |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/pentaho-solutions/system/quartz/quartz.properties b/pentaho-solutions/system/quartz/quartz.properties
+index 2fb89af..6f3e57b 100644
+--- a/pentaho-solutions/system/quartz/quartz.properties
++++ b/pentaho-solutions/system/quartz/quartz.properties
+@@ -447,4 +447,9 @@ org.quartz.dataSource.myDS.jndiURL = Quartz
+ #
+ #org.quartz.triggerListener.dummy.class = org.quartz.examples.DumbTriggerListener
+ 
+-
++org.quartz.dataSource.myDS.driver = com.mysql.jdbc.Driver
++org.quartz.dataSource.myDS.URL = jdbc:mysql://localhost:3306/QUARTZ_DB
++org.quartz.dataSource.myDS.user = MYSQL_PENTAHO_USER
++org.quartz.dataSource.myDS.password = MYSQL_PENTAHO_PASSWORD
++org.quartz.dataSource.myDS.maxConnections = 5
++org.quartz.dataSource.myDS.validationQuery= select 1
+-- 
+1.7.9.5
+

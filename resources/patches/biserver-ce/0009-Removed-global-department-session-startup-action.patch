@@ -1,0 +1,35 @@
+From de565deff8fa827154ace69ab3798712134ff8d5 Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Tue, 11 Jun 2013 10:02:08 +0200
+Subject: [PATCH 9/9] Removed global department session startup action
+
+---
+ pentaho-solutions/system/sessionStartupActions.xml |   10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/pentaho-solutions/system/sessionStartupActions.xml b/pentaho-solutions/system/sessionStartupActions.xml
+index c3f52c3..f4ab342 100644
+--- a/pentaho-solutions/system/sessionStartupActions.xml
++++ b/pentaho-solutions/system/sessionStartupActions.xml
+@@ -37,16 +37,8 @@ PentahoHttpSession, PentahoPortletSession, UserSession, & Standalone session.
+ 					<property name="actionOutputScope" value="session"/>
+ 				</bean>
+ 				<!-- End of UserSession startup actions. -->
+-
+-        <!-- Start of Global startup actions. -->
+-        <bean class="org.pentaho.platform.engine.core.system.SessionStartupAction">
+-          <property name="sessionType" value="org.pentaho.platform.engine.security.session.TrustedSystemStartupSession"/>
+-          <property name="actionPath" value="bi-developers/secure/global-department-list.xaction"/>
+-          <property name="actionOutputScope" value="global"/>
+-        </bean>
+-        <!-- End of Global startup actions. -->
+ 				
+ 			</list>
+ 		</constructor-arg>
+ 	</bean>
+-</beans>
+\ No newline at end of file
++</beans>
+-- 
+1.7.9.5
+

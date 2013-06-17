@@ -1,0 +1,1751 @@
+From 1bac8542c203ece0fbcc81001353ac3a7db6527e Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Wed, 5 Jun 2013 15:10:07 +0200
+Subject: [PATCH 7/9] Added original config files
+
+---
+ ...ntext-spring-security-hibernate.properties.orig |    5 +
+ ...pplicationContext-spring-security-jdbc.xml.orig |   51 ++
+ .../system/hibernate/mysql5.hibernate.cfg.xml.orig |   32 +
+ pentaho-solutions/system/publisher_config.xml.orig |   19 +
+ .../system/quartz/quartz.properties.orig           |  455 ++++++++++
+ tomcat/conf/server.xml.orig                        |  148 +++
+ tomcat/webapps/pentaho/META-INF/context.xml.orig   |   26 +
+ tomcat/webapps/pentaho/WEB-INF/web.xml.orig        |  940 ++++++++++++++++++++
+ 8 files changed, 1676 insertions(+)
+ create mode 100644 pentaho-solutions/system/applicationContext-spring-security-hibernate.properties.orig
+ create mode 100644 pentaho-solutions/system/applicationContext-spring-security-jdbc.xml.orig
+ create mode 100644 pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml.orig
+ create mode 100644 pentaho-solutions/system/publisher_config.xml.orig
+ create mode 100644 pentaho-solutions/system/quartz/quartz.properties.orig
+ create mode 100644 tomcat/conf/server.xml.orig
+ create mode 100644 tomcat/webapps/pentaho/META-INF/context.xml.orig
+ create mode 100644 tomcat/webapps/pentaho/WEB-INF/web.xml.orig
+
+diff --git a/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties.orig b/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties.orig
+new file mode 100644
+index 0000000..c8cd8cf
+--- /dev/null
++++ b/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties.orig
+@@ -0,0 +1,5 @@
++jdbc.driver=com.mysql.jdbc.Driver
++jdbc.url=jdbc:mysql://localhost:3306/HIBERNATE_DB
++jdbc.username=MYSQL_PENTAHO_USER
++jdbc.password=MYSQL_PENTAHO_PASSWORD
++hibernate.dialect=org.hibernate.dialect.MySQLDialect
+diff --git a/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml.orig b/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml.orig
+new file mode 100644
+index 0000000..f7739e2
+--- /dev/null
++++ b/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml.orig
+@@ -0,0 +1,51 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springsource.org/dtd/spring-beans.dtd">
++
++<!--+
++	| Application context containing JDBC AuthenticationProvider 
++	| implementation.
++	+-->
++
++<beans>
++
++	<bean id="daoAuthenticationProvider"
++		class="org.springframework.security.providers.dao.DaoAuthenticationProvider">
++		<property name="userDetailsService">
++			<ref bean="userDetailsService" />
++		</property>
++		<property name="passwordEncoder">
++			<ref bean="passwordEncoder" />
++		</property>
++	</bean>
++
++	<bean id="userDetailsService"
++		class="org.springframework.security.userdetails.jdbc.JdbcDaoImpl">
++		<property name="dataSource">
++			<ref local="dataSource" />
++		</property>
++		<property name="authoritiesByUsernameQuery">
++			<value>
++				<![CDATA[SELECT username, authority FROM GRANTED_AUTHORITIES WHERE username = ? ORDER BY authority]]>
++			</value>
++		</property>
++		<property name="usersByUsernameQuery">
++			<value>
++				<![CDATA[SELECT username, password, enabled FROM USERS WHERE username = ? ORDER BY username]]>
++			</value>
++		</property>
++	</bean>
++	<!--  This is only for Hypersonic. Please update this section for any other database you are using -->
++	<bean id="dataSource"
++		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
++		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
++		<property name="url"
++			value="jdbc:mysql://localhost:3306/HIBERNATE_DB" />
++		<property name="username" value="MYSQL_PENTAHO_USER" />
++		<property name="password" value="MYSQL_PENTAHO_PASSWORD" />
++	</bean>
++
++  <bean id="passwordEncoder"
++    class="org.springframework.security.providers.encoding.PlaintextPasswordEncoder" />
++ 
++
++</beans>
+diff --git a/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml.orig b/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml.orig
+new file mode 100644
+index 0000000..597603b
+--- /dev/null
++++ b/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml.orig
+@@ -0,0 +1,32 @@
++<?xml version='1.0' encoding='utf-8'?>
++<!DOCTYPE hibernate-configuration
++  PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
++  "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
++<hibernate-configuration>
++  <session-factory>
++  
++  	<property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
++
++    <property name="hibernate.generate_statistics">true</property>
++    <property name="hibernate.cache.use_query_cache">true</property>
++  
++    <!--  MySQL Configuration -->
++    <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
++    <property name="connection.url">jdbc:mysql://localhost:3306/HIBERNATE_DB</property>
++    <property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
++    <property name="connection.username">MYSQL_PENTAHO_USER</property>
++    <property name="connection.password">MYSQL_PENTAHO_PASSWORD</property>
++    <property name="connection.pool_size">10</property>
++    <property name="show_sql">false</property>
++    <property name="hibernate.jdbc.use_streams_for_binary">true</property>
++    <!-- replaces DefinitionVersionManager -->
++    <property name="hibernate.hbm2ddl.auto">update</property>
++    <!-- load resource from classpath -->
++    <mapping resource="hibernate/mysql5innodb.hbm.xml" />
++    <!--  This is only used by Pentaho Administration Console. Spring Security will not use these mapping files -->	
++    <mapping resource="PentahoUser.hbm.xml" />
++    <mapping resource="PentahoRole.hbm.xml" />
++    <mapping resource="PentahoUserRoleMapping.hbm.xml" />
++    
++  </session-factory>
++</hibernate-configuration>
+diff --git a/pentaho-solutions/system/publisher_config.xml.orig b/pentaho-solutions/system/publisher_config.xml.orig
+new file mode 100644
+index 0000000..2991af4
+--- /dev/null
++++ b/pentaho-solutions/system/publisher_config.xml.orig
+@@ -0,0 +1,19 @@
++<?xml version="1.0"?>
++<!--
++	This file must be configured before client tools can publish content to
++the server. Publishing involves accepting a file (action sequence, XML
++document, etc.) and placing it into a solution. This action should only be
++allowed if the tool is configured with a server/deployment-specific password.
++The RepositoryFilePublisher is now coded to expect an MD5 hash of the password
++entered here before it will allow publish into the server. The BI Platform
++handles the MD5 hash; the password you type into this file must be in clear
++text.
++	
++	This is a critical security measure designed to prevent malicious
++actions from being published to your server.  Please take care to make the
++password sufficiently difficult to guess. Also take care that the contents of
++this file are not generally available.
++-->
++<publisher-config>
++	<publisher-password></publisher-password>
++</publisher-config>
+diff --git a/pentaho-solutions/system/quartz/quartz.properties.orig b/pentaho-solutions/system/quartz/quartz.properties.orig
+new file mode 100644
+index 0000000..6f3e57b
+--- /dev/null
++++ b/pentaho-solutions/system/quartz/quartz.properties.orig
+@@ -0,0 +1,455 @@
++# Copyright 2008 Pentaho Corporation.  All rights reserved. 
++# This software was developed by Pentaho Corporation and is provided under the terms 
++# of the Mozilla Public License, Version 1.1, or any later version. You may not use 
++# this file except in compliance with the license. If you need a copy of the license, 
++# please go to http://www.mozilla.org/MPL/MPL-1.1.txt. The Original Code is the Pentaho 
++# BI Platform.  The Initial Developer is Pentaho Corporation.
++#
++# Software distributed under the Mozilla Public License is distributed on an "AS IS" 
++# basis, WITHOUT WARRANTY OF ANY KIND, either express or  implied. Please refer to 
++# the license for the specific language governing your rights and limitations.
++# Properties file for use by StdSchedulerFactory
++# to create a Quartz Scheduler Instance.
++#
++# Instances of the specified JobStore, ThreadPool and Logger classes will
++# be created by name, and then any additional properties specified for them
++# in this file will be set on the instance by calling an equivalent 'set'
++# method. (see below for more examples)
++#
++# ===========================================================================
++# Configure Main Scheduler Properties  ======================================
++# ===========================================================================
++#
++# The general pattern for defining the scheduler's main properties is:
++#
++#     org.quartz.scheduler.instanceName = SCHED_NAME
++#     org.quartz.scheduler.instanceId = INSTANCE_ID
++#     org.quartz.scheduler.threadName = THREAD_NAME
++#     org.quartz.scheduler.rmi.export = false
++#     org.quartz.scheduler.rmi.proxy = false
++#     org.quartz.scheduler.rmi.registryHost = localhost
++#     org.quartz.scheduler.rmi.registryPort = 1099
++#     org.quartz.scheduler.rmi.createRegistry = never
++#     org.quartz.scheduler.userTransactionURL = USER_TX_LOCATION
++#     org.quartz.scheduler.wrapJobExecutionInUserTransaction = JOBS_IN_USER_TX
++#     org.quartz.scheduler.idleWaitTime = IDLE_WAIT_TIME
++#     org.quartz.scheduler.dbFailureRetryInterval = DB_FAILURE_RETRY_INTERVAL
++#     org.quartz.scheduler.classLoadHelper.class = CLASS_LOAD_HELPER_CLASS
++#     org.quartz.context.key.SOME_KEY = SOME_VALUE
++#
++#
++# "SCHED_NAME" can be any string, and has no meaning to the scheduler itself -
++# but rather serves as a mechanism for client code to distinguish schedulers
++# when multiple instances are used within the same program.  If you are using
++# the clustering features, you must use the same name for every instance in 
++# the cluster that is 'logically' the same Scheduler.
++#
++# "INSTANCE_ID" can be any string, and but must be unique for all schedulers
++# working as if they are the same 'logical' Scheduler within a cluster.
++# you may use the value "AUTO" as the instanceId if you wish the Id to be 
++# generated for you.
++#
++# "THREAD_NAME" can be any String that is a valid name for a java thread. If
++# this property is not specified, the thread will receive the scheduler's 
++# name ("org.quartz.scheduler.instanceName").
++#
++# "USER_TX_LOCATION" should be set to the JNDI URL at which Quartz can locate
++# the Application Server's UserTransaction manager.  The default value (if not
++# specified) is "java:comp/UserTransaction" - which works for almost all 
++# Application Servers.  Websphere users may need to set this property to 
++# "jta/usertransaction".  This is only used if Quartz is configured to use
++# JobStoreCMT, and "JOBS_IN_USER_TX" is set to true.
++# 
++# "JOBS_IN_USER_TX" should be set to "true" if you want Quartz to start a 
++# UserTransaction before calling execute on your job.  The Tx will commit after
++# the job's execute method completes, and the JobDataMap is updated (if it is
++# a StatefulJob).  The default value is "false".
++#
++# "IDLE_WAIT_TIME" is the amount of time in milliseconds that the scheduler 
++# will wait before re-queries for available triggers when the scheduler is otherwise
++# idle.  Normally you should not have to 'tune' this parameter, unless you're using
++# XA transactions, and are having problems with delayed firings of triggers that
++# should fire immediately.
++#
++# "DB_FAILURE_RETRY_INTERVAL" is the amount of time in milliseconds that the
++# scheduler will wait between re-tries when it has detected a loss of 
++# connectivity to the database (obviously not meaningful with RamJobStore)
++#
++# "CLASS_LOAD_HELPER_CLASS" defaults to the most robust approach, which is to 
++# use the "org.quartz.simpl.CascadingClassLoadHelper" class - which in turn
++# uses every other ClassLoadHelper class until one works.  You should probably
++# not find the need to specify any other class for this property, though strange
++# things seem to happen within application servers.  All of the current 
++# ClassLoadHelper implementation can be found in the "org.quartz.simpl" package.
++#
++# "SOME_KEY" and "SOME_VALUE" represent a name-value pair that will be placed
++# into the "scheduler context" as strings. (see Scheduler.getContext()).  
++# So for example, the setting "org.quartz.context.key.MyKey = MyValue" would 
++# perform the equivalent of scheduler.getContext().put("MyKey", "MyValue").
++#
++#
++# RMI notes:
++#
++# If you want the Quartz Scheduler exported via RMI as a server then set
++# the 'rmi.export' flag to true.  You must also then specify a  host and
++# port for the rmiregistry process - which is typically 'localhost' port 1099.
++#
++# Set the 'rmi.createRegistry' flag according to how you want Quartz to cause 
++# the creation of an RMI Registry.  Use "false" or "never" if you don't want
++# Quartz to create a registry.  Use "true" or "as_needed" if you want Quartz
++# to first attempt to use an existing registry, and then fall back to creating 
++# one.  Use "always" if you want Quartz to attempt creating a Registry, and
++# then fall back to using an existing one.
++#   If a registry is created, it will be bound to port number in the given 
++# the 'rmi.registryPort' property, and 'rmi.registryHost' should be "localhost".
++#
++# If you want to connect (use) a remotely served scheduler, then set the
++# 'rmi.proxy' flag to true.  You must also then specify a  host and port
++# for the rmiregistry process - which is typically 'localhost' port 1099.
++#
++# You cannot specify a 'true' value for both 'export' and 'proxy' - if you
++# do, the 'export' option will be ignored.  A value of 'false' for both
++# 'export' and 'proxy' properties is of course valid.
++#
++#
++org.quartz.scheduler.instanceName = PentahoQuartzScheduler
++org.quartz.scheduler.instanceId = 1
++org.quartz.scheduler.rmi.export = false
++org.quartz.scheduler.rmi.proxy = false
++org.quartz.scheduler.wrapJobExecutionInUserTransaction = false
++#
++# ===========================================================================
++# Configure ThreadPool  =====================================================
++# ===========================================================================
++#
++# The general pattern for defining a thread pool is the following:
++#
++#     org.quartz.threadPool.class = org.quartz.simpl.SimpleThreadPool
++#     org.quartz.threadPool.threadCount = THREAD_COUNT
++#     org.quartz.threadPool.threadPriority = THREAD_PRIO
++#
++#       optional parameters for SimpleThreadPool are:
++#
++#         org.quartz.threadPool.makeThreadsDaemons = DAEMON_THREADS
++#         org.quartz.threadPool.threadsInheritGroupOfInitializingThread = INHERIT_GRP
++#         org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread = INHERIT_LDR
++#
++#  or
++#
++#     org.quartz.threadPool.class = com.mycompany.goo.FooThreadPool
++#     org.quartz.threadPool.somePropOfFooThreadPool = someValue
++#
++# "THREAD_COUNT" can be any positive integer, although you should realize that
++# only numbers between 1 and 100 are very practical.  This is the number of
++# threads that are available for concurrent execution of jobs.  If you only
++# have a few jobs that fire a few times a day, then 1 thread is plenty! If you
++# have tens of thousands of jobs, with many firing every minute, then you
++# probably want a thread count more like 50 or 100 (this highly depends on the
++# nature of the work that your jobs perform, and your systems resources!)
++#
++# "THREAD_PRIO" can be any int between Thread.MIN_PRIORITY (1) and
++# Thread.MAX_PRIORITY (10).  The default is Thread.NORM_PRIORITY (5).
++#
++# "DAEMON_THREADS" can be set to "true" to have the threads in the pool created
++# as daemon threads.  Default is "false".
++#
++# "INHERIT_GRP" can be "true" or "false", and defaults to true.
++#
++# "INHERIT_LDR" can be "true" or "false", and defaults to false.
++#
++org.quartz.threadPool.class = org.quartz.simpl.SimpleThreadPool
++org.quartz.threadPool.threadCount = 10
++org.quartz.threadPool.threadPriority = 5
++org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread = true
++#
++# ===========================================================================
++# Configure JobStore  =======================================================
++# ===========================================================================
++#
++# The general pattern for defining a JobStore is one of the following:
++#
++#     org.quartz.jobStore.class = org.quartz.simpl.RAMJobStore
++#     org.quartz.jobStore.misfireThreshold = MISFIRE_THRESHOLD
++#
++#  or
++#
++#     org.quartz.jobStore.class = org.quartz.impl.jdbcjobstore.<JobStoreClass>
++#       Where JobStoreClass is one of:
++#         - JobStoreTX is for standalone-Quartz implementations
++#         - JobStoreCMT is for appserver-based container-managed
++#           transaction Quartz implementations
++#
++#     org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.<DriverDelegateClass>
++#       Where DriverDelegateClass is one of:
++#         - StdJDBCDelegate (for many JDBC-compliant drivers)
++#         - MSSQLDelegate (for Microsoft SQL Server drivers)
++#         - PostgreSQLDelegate (for PostgreSQL drivers)
++#         - WebLogicDelegate (for WebLogic drivers)
++#         - oracle.OracleDelegate (for Oracle drivers)
++#
++#     org.quartz.jobStore.useProperties = USE_PROPERTIES
++#     org.quartz.jobStore.dataSource = DS_NAME
++#     org.quartz.jobStore.tablePrefix = TABLE_PREFIX
++#     org.quartz.jobStore.isClustered = IS_CLUSTERED
++#     org.quartz.jobStore.selectWithLockSQL = LOCKING_SELECT_STATEMENT
++#     org.quartz.jobStore.dontSetAutoCommitFalse = DONT_TURN_OFF_AUTO_COMMIT
++#     org.quartz.jobStore.maxMisfiresToHandleAtATime = MAX_MISFIRE_HANDLE
++#     org.quartz.jobStore.txIsolationLevelSerializable = SERIALIZABLE_ISOLATION
++#
++#   If you're using JobStoreCMT then you need this param also:
++#
++#     org.quartz.jobStore.nonManagedTXDataSource = NON_MANAGED_TX_DS_NAME
++#
++#   And, if you're using JobStoreCMT, then these params are optional:
++#
++#     org.quartz.jobStore.dontSetNonManagedTXConnectionAutoCommitFalse = DONT_TURN_OFF_AUTO_COMMIT
++#     org.quartz.jobStore.txIsolationLevelReadCommitted = READ_COMMITTED_ISOLATION
++#
++#
++#  or, for a custom JobStore implementation:
++#
++#     org.quartz.jobStore.class = com.mycompany.goo.FooJobStore
++#     org.quartz.jobStore.somePropOfFooJobStore = someValue
++#
++#
++# The value of "MISFIRE_THRESHOLD" should be the number of milliseconds the
++# scheduler will 'tolerate' a trigger to pass its next-fire-time by, before
++# being considered "misfired".  The default value (if you don't make an entry
++# of this property in your configuration) is 60000 (60 seconds).
++#
++# The value of "MAX_MISFIRE_HANDLE" is the maximum number of misfired triggers 
++# that the misfire handlingthread will try to recover at one time (within one 
++# transaction).  If unspecified, the default is 20.
++#
++# The "USE_PROPERTIES" flag (true or false value - defaults to false) instructs
++# JDBCJobStore that all values in JobDataMaps will be Strings, and therefore
++# can be stored as name-value pairs, rather than storing more complex objects
++# in their serialized form in the BLOB column.  This is much safer in the long 
++# term, as you avoid the class versioning issues that there are with 
++# serializing your non-String classes into a BLOB.
++#
++# JDBCJobStore's "DS_NAME" must be the name of one the datasources
++# defined in this file. JobStoreCMT _requires_ a datasource that contains 
++# container-managed-transaction-capable connections.  Typically this means a 
++# datasource that is managed by an application server, and used by Quartz by
++# specifying the JNDI url of the datasource.
++#
++# JobStoreCMT also _requires_ a (second) datasource that contains connections
++# that will not be part of container-managed transactions. 
++# "NON_MANAGED_TX_DS_NAME" must be the name of one the datasources defined in 
++# this file. - This datasource must contain non-container-transaction managed
++# connections.  
++#
++# JDBCJobStore's "TABLE_PREFIX" property is a string equal to the prefix
++# given to Quartz's tables that were created in your database.
++#
++# JDBCJobStore's "IS_CLUSTERED" property must be set to either "true" or
++# "false".  If unset, the default is "false".  This property must be set
++# to "true" if you are having multiple instances of Quartz use the same
++# set of database tables... otherwise you will experience havoc.  Also
++# note that each instance in the cluster MUST have a unique "instance id"
++# (the "org.quartz.scheduler.instanceId" property), but should have the 
++# same "scheduler instance name" ("org.quartz.scheduler.instanceName").
++#
++# * NOTE: Never run clustering on separate machines, unless their clocks are
++#         synchronized using some form of time-sync service (daemon) that runs
++#         very regularly (the clocks must be within a second of each other).
++#         See http://www.boulder.nist.gov/timefreq/service/its.htm if you are
++#         unfamiliar with how to do this.
++#
++#         Also: never fire-up a non-clustered instance against the same set
++#         of tables that any other instance is running against.  You will 
++#         get serious data corruption, and eratic behavior.
++#
++#
++# JDBCJobStore's "LOCKING_SELECT_STATEMENT" property must be a SQL string
++# that selects a row in the "LOCKS" table and places a lock on it. If not
++# set, the default is "SELECT * FROM {0}LOCKS WHERE LOCK_NAME = ? FOR UPDATE", 
++# which works for most databases.  The "{0}" is replaced during run-time 
++# with the TABLE_PREFIX that you configured above.
++#
++# "DONT_TURN_OFF_AUTO_COMMIT" tells Quartz not to call setAutoCommit(false) 
++# on connections obtained from the DataSource(s).  This can be helpful 
++# in a few situations, such as if you have a driver that complains if 
++# it is called when it is already off.  This property defaults to false.
++#
++# "SERIALIZABLE_ISOLATION" tells Quartz (when using JobStoreTX or CMT) to call 
++# setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);  on JDBC 
++# connections.  This can be helpful to prevent lock timeouts with some databases 
++# under high load, and "longer"-lasting transactions.
++#
++# "READ_COMMITTED_ISOLATION" tells Quartz (When using JobStoreCMT) to call
++# setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);  on the
++# non-managed JDBC connections.  This can be helpful to prevent lock timeouts 
++# with some databases (such as DB2) under high load, and "longer"-lasting 
++# transactions.
++#
++#org.quartz.jobStore.misfireThreshold = 60000
++#org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.StdJDBCDelegate
++#org.quartz.jobStore.useProperties = false
++#org.quartz.jobStore.dataSource = myDS
++#org.quartz.jobStore.tablePrefix = QRTZ_
++#org.quartz.jobStore.isClustered = false
++
++# Job Store
++org.quartz.jobStore.class = org.quartz.impl.jdbcjobstore.JobStoreTX
++
++#_replace_jobstore_properties
++
++org.quartz.jobStore.misfireThreshold = 60000
++org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.StdJDBCDelegate
++org.quartz.jobStore.useProperties = false
++org.quartz.jobStore.dataSource = myDS
++org.quartz.jobStore.tablePrefix = QRTZ_
++org.quartz.jobStore.isClustered = false
++
++# ===========================================================================
++# Configure Datasources  ====================================================
++# ===========================================================================
++#
++# (only needed when using JDBCJobStore, or a plugin that requires JDBC)
++#
++# -- If your Scheduler is very busy (i.e. nearly always executing the same
++#    number of jobs as the size of the thread pool, then you should probably
++#    set the number of connections in the DataSource to be the size of the
++#    thread pool + 1
++#
++# The general pattern for defining a DataSource is one of the following:
++#
++#     org.quartz.dataSource.NAME.driver = DRIVER_CLASS_NAME
++#     org.quartz.dataSource.NAME.URL = DB_URL
++#     org.quartz.dataSource.NAME.user = DB_USER
++#     org.quartz.dataSource.NAME.password = DB_PASSWORD
++#     org.quartz.dataSource.NAME.maxConnections = DB_POOL_SIZE
++#     org.quartz.dataSource.NAME.validationQuery= VALIDATION_QUERY
++#
++#  or
++#
++#     org.quartz.dataSource.NAME.jndiURL = DB_JNDI_URL
++#
++#  or
++#     org.quartz.dataSource.NAME.jndiURL = DB_JNDI_URL
++#     org.quartz.dataSource.NAME.jndiAlwaysLookup = DB_JNDI_ALWAYS_LOOKUP
++#     org.quartz.dataSource.NAME.java.naming.factory.initial = JNDI_CTXT_FACTORY
++#     org.quartz.dataSource.NAME.java.naming.provider.url = JNDI_PROVIDER_URL
++#     org.quartz.dataSource.NAME.java.naming.security.principal = JNDI_PRINCIPAL
++#     org.quartz.dataSource.NAME.java.naming.security.credentials = JNDI_CREDENTIALS
++#
++#
++# The DataSource's "NAME" can be anything you want, and has no meaning other
++# than being able to 'define' a DataSource here, and assign it by name to the
++# JDBCJobStore.
++#
++# With the two types of DataSource definition shown above, a DataSource can
++# either be created with the given database connection information, or can
++# be "logically mapped" to use a DataSource that is managed by an application
++# server an made available via JNDI.
++#
++# "DRIVER_CLASS_NAME" must be the java class name of the JDBC driver for your
++# database.
++#
++# "DB_URL" must be the connection URL (host, port, etc.) for connection to your
++# database.
++#
++# "DB_USER" is the user name to use when connecting to your database.
++#
++# "DB_USER" is the password to use when connecting to your database.
++#
++# "DB_POOL_SIZE" is the maximum number of connections that the DataSource can
++# create in it's pool of connections.
++#
++# "VALIDATION_QUERY" is an optional SQL query string that the DataSource
++# can use to detect and replace failed/corrupt connections.  For example an
++# oracle user might choose "select table_name from user_tables" - which is a 
++# query that should never fail - unless the connection is actually bad.
++#
++# "DB_JNDI_URL" is the JNDI URL for a DataSource that is managed by your
++# application server.  Additionally, you can provide the class name of the 
++# JNDI InitialContextFactory that you wish to use, the provider's URL, and
++# a username & password for connecting to the JNDI provider, if it is not
++# the default provider of your environment.
++#
++# "DB_JNDI_ALWAYS_LOOKUP" can be "true" or "false" - if the property is not
++# set, the default is "false".  This option tells Quartz whether or not it
++# should always lookup the DataSource under the JNDI tree each time it 
++# needs to get a connection from it.  If set to (the default) "false", 
++# Quartz will "hold on to" the DataSource after looking it up only once.
++#
++
++org.quartz.dataSource.myDS.jndiURL = Quartz
++
++#
++#org.quartz.dataSource.myDS.jndiURL=jdbc/PAWS
++#org.quartz.dataSource.myDS.jndiAlwaysLookup=false
++#org.quartz.dataSource.myDS.java.naming.factory.initial=com.evermind.server.rmi.RMIInitialContextFactory
++#org.quartz.dataSource.myDS.java.naming.provider.url=ormi://localhost
++#org.quartz.dataSource.myDS.java.naming.security.principal=admin
++#org.quartz.dataSource.myDS.java.naming.security.credentials=123
++#
++# ===========================================================================
++# Configure SchedulerPlugins  ===============================================
++# ===========================================================================
++#
++# The general pattern for defining a SchedulerPlugin is the following:
++#
++#     org.quartz.plugin.NAME.class = PLUGIN_CLASS_NAME
++#
++# If the plugin class has properties you want set via some "setter" methods 
++# on the class, name the properties and values as such
++#
++#     org.quartz.plugin.NAME.propName = propValue
++#
++# ...where "propName" corrisponds to a "setPropName" method on the plugin 
++# class.  Only primitive data type values (including Strings) are supported.
++#
++#
++# Configure Plugins =========================================================
++#
++#org.quartz.plugin.triggHistory.class = org.quartz.plugins.history.LoggingTriggerHistoryPlugin
++#org.quartz.plugin.triggHistory.triggerFiredMessage = Trigger {1}.{0} fired job {6}.{5} at: {4, date, HH:mm:ss MM/dd/yyyy}
++#org.quartz.plugin.triggHistory.triggerCompleteMessage = Trigger {1}.{0} completed firing job {6}.{5} at {4, date, HH:mm:ss MM/dd/yyyy} with resulting trigger instruction code: {9}
++#
++#org.quartz.plugin.jobInitializer.class = org.quartz.plugins.xml.JobInitializationPlugin
++#org.quartz.plugin.jobInitializer.fileName = data/my_job_data.xml
++#org.quartz.plugin.jobInitializer.overWriteExistingJobs = false
++#org.quartz.plugin.jobInitializer.failOnFileNotFound = true
++#
++#org.quartz.plugin.shutdownhook.class = org.quartz.plugins.management.ShutdownHookPlugin
++#org.quartz.plugin.shutdownhook.cleanShutdown = true
++#
++# ===========================================================================
++# Configure Listeners         ===============================================
++# ===========================================================================
++#
++# The general pattern for defining a "Global" TriggerListener is:
++#
++#     org.quartz.triggerListener.NAME.class = TRIGGER_LISTENER_CLASS_NAME
++#
++# The general pattern for defining a "Global" JobListener is the following:
++#
++#     org.quartz.jobListener.NAME.class = JOB_LISTENER_CLASS_NAME
++#
++# "NAME" becomes the listener's name, and a "setName(String)" method is 
++# reflectively found and called on the class that is instantiated.
++#
++# If the listener class has properties you want set via some "setter" methods 
++# on the class, name the properties and values as such
++#
++#     org.quartz.triggerListener.NAME.propName = propValue
++# or
++#     org.quartz.jobListener.NAME.propName = propValue
++#
++# ...where "propName" corrisponds to a "setPropName" method on the listener 
++# class.  Only primitive data type values (including Strings) are supported.
++#
++#
++# Configure Plugins =========================================================
++#
++#org.quartz.triggerListener.dummy.class = org.quartz.examples.DumbTriggerListener
++
++org.quartz.dataSource.myDS.driver = com.mysql.jdbc.Driver
++org.quartz.dataSource.myDS.URL = jdbc:mysql://localhost:3306/QUARTZ_DB
++org.quartz.dataSource.myDS.user = MYSQL_PENTAHO_USER
++org.quartz.dataSource.myDS.password = MYSQL_PENTAHO_PASSWORD
++org.quartz.dataSource.myDS.maxConnections = 5
++org.quartz.dataSource.myDS.validationQuery= select 1
+diff --git a/tomcat/conf/server.xml.orig b/tomcat/conf/server.xml.orig
+new file mode 100644
+index 0000000..dcd2930
+--- /dev/null
++++ b/tomcat/conf/server.xml.orig
+@@ -0,0 +1,148 @@
++<?xml version='1.0' encoding='utf-8'?>
++<!--
++  Licensed to the Apache Software Foundation (ASF) under one or more
++  contributor license agreements.  See the NOTICE file distributed with
++  this work for additional information regarding copyright ownership.
++  The ASF licenses this file to You under the Apache License, Version 2.0
++  (the "License"); you may not use this file except in compliance with
++  the License.  You may obtain a copy of the License at
++
++      http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++-->
++<!-- Note:  A "Server" is not itself a "Container", so you may not
++     define subcomponents such as "Valves" at this level.
++     Documentation at /docs/config/server.html
++ -->
++<Server port="8005" shutdown="SHUTDOWN">
++
++  <!--APR library loader. Documentation at /docs/apr.html -->
++  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
++  <!--Initialize Jasper prior to webapps are loaded. Documentation at /docs/jasper-howto.html -->
++  <Listener className="org.apache.catalina.core.JasperListener" />
++  <!-- Prevent memory leaks due to use of particular java/javax APIs-->
++  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
++  <!-- JMX Support for the Tomcat server. Documentation at /docs/non-existent.html -->
++  <Listener className="org.apache.catalina.mbeans.ServerLifecycleListener" />
++  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
++
++  <!-- Global JNDI resources
++       Documentation at /docs/jndi-resources-howto.html
++  -->
++  <GlobalNamingResources>
++    <!-- Editable user database that can also be used by
++         UserDatabaseRealm to authenticate users
++    -->
++    <Resource name="UserDatabase" auth="Container"
++              type="org.apache.catalina.UserDatabase"
++              description="User database that can be updated and saved"
++              factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
++              pathname="conf/tomcat-users.xml" />
++  </GlobalNamingResources>
++
++  <!-- A "Service" is a collection of one or more "Connectors" that share
++       a single "Container" Note:  A "Service" is not itself a "Container", 
++       so you may not define subcomponents such as "Valves" at this level.
++       Documentation at /docs/config/service.html
++   -->
++  <Service name="Catalina">
++  
++    <!--The connectors can use a shared executor, you can define one or more named thread pools-->
++    <!--
++    <Executor name="tomcatThreadPool" namePrefix="catalina-exec-" 
++        maxThreads="150" minSpareThreads="4"/>
++    -->
++    
++    
++    <!-- A "Connector" represents an endpoint by which requests are received
++         and responses are returned. Documentation at :
++         Java HTTP Connector: /docs/config/http.html (blocking & non-blocking)
++         Java AJP  Connector: /docs/config/ajp.html
++         APR (HTTP/AJP) Connector: /docs/apr.html
++         Define a non-SSL HTTP/1.1 Connector on port 8080
++    -->
++    <Connector URIEncoding="UTF-8" port="8080" protocol="HTTP/1.1" 
++               connectionTimeout="20000" 
++               redirectPort="8443" />
++    <!-- A "Connector" using the shared thread pool-->
++    <!--
++    <Connector URIEncoding="UTF-8" executor="tomcatThreadPool"
++               port="8080" protocol="HTTP/1.1" 
++               connectionTimeout="20000" 
++               redirectPort="8443" />
++    -->           
++    <!-- Define a SSL HTTP/1.1 Connector on port 8443
++         This connector uses the JSSE configuration, when using APR, the 
++         connector should be using the OpenSSL style configuration
++         described in the APR documentation -->
++    <!--
++    <Connector URIEncoding="UTF-8" port="8443" protocol="HTTP/1.1" SSLEnabled="true"
++               maxThreads="150" scheme="https" secure="true"
++               clientAuth="false" sslProtocol="TLS" />
++    -->
++
++    <!-- Define an AJP 1.3 Connector on port 8009 -->
++    <Connector URIEncoding="UTF-8" port="8009" protocol="AJP/1.3" redirectPort="8443" />
++
++
++    <!-- An Engine represents the entry point (within Catalina) that processes
++         every request.  The Engine implementation for Tomcat stand alone
++         analyzes the HTTP headers included with the request, and passes them
++         on to the appropriate Host (virtual host).
++         Documentation at /docs/config/engine.html -->
++
++    <!-- You should set jvmRoute to support load-balancing via AJP ie :
++    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">         
++    --> 
++    <Engine name="Catalina" defaultHost="localhost">
++
++      <!--For clustering, please take a look at documentation at:
++          /docs/cluster-howto.html  (simple how to)
++          /docs/config/cluster.html (reference documentation) -->
++      <!--
++      <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>
++      -->        
++
++      <!-- The request dumper valve dumps useful debugging information about
++           the request and response data received and sent by Tomcat.
++           Documentation at: /docs/config/valve.html -->
++      <!--
++      <Valve className="org.apache.catalina.valves.RequestDumperValve"/>
++      -->
++
++      <!-- This Realm uses the UserDatabase configured in the global JNDI
++           resources under the key "UserDatabase".  Any edits
++           that are performed against this UserDatabase are immediately
++           available for use by the Realm.  -->
++      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
++             resourceName="UserDatabase"/>
++
++      <!-- Define the default virtual host
++           Note: XML Schema validation will not work with Xerces 2.2.
++       -->
++      <Host name="localhost"  appBase="webapps"
++            unpackWARs="true" autoDeploy="true"
++            xmlValidation="false" xmlNamespaceAware="false">
++
++        <!-- SingleSignOn valve, share authentication between web applications
++             Documentation at: /docs/config/valve.html -->
++        <!--
++        <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
++        -->
++
++        <!-- Access log processes all example.
++             Documentation at: /docs/config/valve.html -->
++        <!--
++        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"  
++               prefix="localhost_access_log." suffix=".txt" pattern="common" resolveHosts="false"/>
++        -->
++
++      </Host>
++    </Engine>
++  </Service>
++</Server>
+diff --git a/tomcat/webapps/pentaho/META-INF/context.xml.orig b/tomcat/webapps/pentaho/META-INF/context.xml.orig
+new file mode 100644
+index 0000000..addfa5b
+--- /dev/null
++++ b/tomcat/webapps/pentaho/META-INF/context.xml.orig
+@@ -0,0 +1,26 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<Context path="/pentaho" docbase="webapps/pentaho/">
++    <Resource name="jdbc/Hibernate" auth="Container" 
++        type="javax.sql.DataSource"
++        factory="org.apache.commons.dbcp.BasicDataSourceFactory"
++        maxActive="20"
++        maxIdle="5"
++        maxWait="10000"
++        username="MYSQL_PENTAHO_USER"
++        password="MYSQL_PENTAHO_PASSWORD"
++        driverClassName="com.mysql.jdbc.Driver"
++        url="jdbc:mysql://localhost:3306/HIBERNATE_DB"
++        validationQuery="select 1" />
++
++    <Resource name="jdbc/Quartz" auth="Container" 
++        type="javax.sql.DataSource" 
++        factory="org.apache.commons.dbcp.BasicDataSourceFactory" 
++        maxActive="20"
++        maxIdle="5"
++        maxWait="10000"
++        username="MYSQL_PENTAHO_USER"
++        password="MYSQL_PENTAHO_PASSWORD"
++        driverClassName="com.mysql.jdbc.Driver"
++        url="jdbc:mysql://localhost:3306/QUARTZ_DB"
++        validationQuery="select 1" />
++</Context>
+diff --git a/tomcat/webapps/pentaho/WEB-INF/web.xml.orig b/tomcat/webapps/pentaho/WEB-INF/web.xml.orig
+new file mode 100644
+index 0000000..601adde
+--- /dev/null
++++ b/tomcat/webapps/pentaho/WEB-INF/web.xml.orig
+@@ -0,0 +1,940 @@
++<?xml version="1.0"?>
++<!DOCTYPE web-app PUBLIC
++   "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
++   "http://java.sun.com/dtd/web-app_2_3.dtd">
++
++<web-app>
++
++	<context-param>
++		<param-name>solution-path</param-name>
++		<param-value></param-value>
++	</context-param>
++
++	<!--
++		<context-param> <param-name>pentaho-system-cfg</param-name> <param-value>c:/tmp/test_pentaho.xml</param-value>
++		</context-param>
++	-->
++	<!--  This context parameter is being deprecated. We don't use this any more. We have added a new context parameter called fully-qualified-server-url -->
++	<context-param>
++		<param-name>base-url</param-name>
++		<param-value></param-value>
++	</context-param>
++
++	<!--  FullyQualifiedServerUrl is used only in the case of offline content generation and whenever something need to talk back to the server -->
++	<context-param>
++		<param-name>fully-qualified-server-url</param-name>
++		<param-value>http://localhost:8080/pentaho/</param-value>
++	</context-param>
++	
++	<context-param>
++		<param-name>locale-language</param-name>
++		<!-- for example 'fr' for French, 'de' for German, da for danish -->
++		<param-value></param-value>
++	</context-param>
++
++	<context-param>
++		<param-name>locale-country</param-name>
++		<!-- for example 'FR' for France, 'CA' for Canada -->
++		<param-value></param-value>
++	</context-param>
++	<context-param>
++		<param-name>contextClass</param-name>
++		<param-value>org.pentaho.platform.web.http.context.PentahoSolutionSpringApplicationContext</param-value>
++	</context-param>
++
++	<context-param>
++      <param-name>contextConfigLocation</param-name>
++      <!-- This file is relative to the "system" folder within your pentaho solutions folder. -->
++      <!-- Instead of adding files here, add them as imports to pentaho-spring-beans.xml. -->
++      <param-value>pentaho-spring-beans.xml</param-value>
++	</context-param>
++
++	<context-param>
++		<param-name>pentahoObjectFactory</param-name>
++		<param-value>org.pentaho.platform.web.http.context.WebSpringPentahoObjectFactory</param-value>
++	</context-param>
++
++	<!--
++		The param-value for objectFactoryCreatorCfgFile must be either: * just the file name of the spring configuration file
++		for the pentaho object factory, in which case the code will look in the solution repository's system folder for teh
++		file with that name. * The full path to the spring configuration file (including file name). * Empty or non-existent,
++		the system will look for the file called pentahoObjects.spring.xml in the solution's system folder
++	-->
++	<context-param>
++		<param-name>pentahoObjectFactoryCfgFile</param-name>
++		<param-value>pentahoObjects.spring.xml</param-value>
++	</context-param>
++  
++	<!--
++		This defaults to UTF-8. Uncomment this section and change the value for other encodings. Also change the URIEncoding
++		in Tomcat's server.xml.
++	-->
++	<context-param>
++		<param-name>encoding</param-name>
++		<param-value>UTF-8</param-value>
++	</context-param>
++
++	<!--
++		this defaults to LTR (left to right), uncomment this section and change the value for other text directions
++		<context-param> <param-name>text-direction</param-name> <param-value>RTL</param-value> </context-param>
++	-->
++
++	<context-param>
++		<param-name>com.tonbeller.wcf.controller.RequestContextFactory</param-name>
++		<param-value>com.tonbeller.wcf.controller.RequestContextFactoryImpl</param-value>
++	</context-param>
++    
++	<!-- insert additional context-params -->
++
++	<filter> <!-- This must be the first filter listed in the web.xml -->
++		<filter-name>Set Character Encoding Filter</filter-name>
++		<filter-class>org.pentaho.platform.web.http.filters.PentahoAwareCharacterEncodingFilter</filter-class>
++		<init-param>
++			<param-name>ignore</param-name>
++			<param-value>yes</param-value>
++		</init-param>
++	</filter>
++	
++	<!-- Pentaho Request Context Filter is use to extract the Context Path from Servlet Request and store it in the PentahoRequestContextHolder.
++	This is needed to get the relative path to the server for online content generation and requesting of resources.
++	 -->
++	
++	<filter>
++		<filter-name>Pentaho Request Context Filter</filter-name>
++		<filter-class>org.pentaho.platform.web.http.filters.PentahoRequestContextFilter</filter-class>
++	</filter>
++
++	<filter>
++		<filter-name>Spring Security Filter Chain Proxy</filter-name>
++		<filter-class>org.springframework.security.util.FilterToBeanProxy</filter-class>
++		<init-param>
++			<param-name>targetBean</param-name>
++			<param-value>filterChainProxy</param-value>
++		</init-param>
++	</filter>
++
++	<filter>
++		<filter-name>SystemStatusFilter</filter-name>
++		<filter-class>org.pentaho.platform.web.http.filters.SystemStatusFilter</filter-class>
++		<init-param>
++			<param-name>initFailurePage</param-name>
++			<param-value>InitFailure</param-value>
++			<description>This page is displayed if the PentahoSystem fails to properly initialize.</description>
++		</init-param>
++	</filter>
++
++	<filter>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<filter-class>org.pentaho.platform.web.http.filters.ProxyTrustingFilter</filter-class>
++		<init-param>
++			<param-name>TrustedIpAddrs</param-name>
++			<param-value>127.0.0.1,0\:0\:0\:0\:0\:0\:0\:1(%.+)*$</param-value>
++			<description>Comma separated list of IP addresses of a trusted hosts.</description>
++		</init-param>
++	</filter>
++	
++	<!--  Pentaho Web Context Filter checks to see if webcontext.js is being requested. It writes the content of webcontext.js 
++	      webcontext.js contains value for CONTEXT_PATH and FULLY_QUALIFIED_SERVER_URL
++	  -->
++	<filter>
++		<filter-name>Pentaho Web Context Filter</filter-name>
++		<filter-class>org.pentaho.platform.web.http.filters.PentahoWebContextFilter</filter-class>
++	</filter>
++
++	<!-- insert additional filters -->
++
++	<filter-mapping>
++		<filter-name>Set Character Encoding Filter</filter-name>
++		<url-pattern>/*</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>SystemStatusFilter</filter-name>
++		<url-pattern>/*</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/SchedulerAdminService</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/SubscriptionAdminService</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/ServiceActionService</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/PublishService</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/ResetRepositoryService</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Proxy Trusting Filter</filter-name>
++		<url-pattern>/SolutionRepositoryService</url-pattern>
++	</filter-mapping>
++	<!-- Filter mapping for security. Note that all objects are locked down. We could change this here as desired. -->
++	<filter-mapping>
++		<filter-name>Spring Security Filter Chain Proxy</filter-name>
++		<url-pattern>/*</url-pattern>
++	</filter-mapping>
++
++	<filter-mapping>
++		<filter-name>Pentaho Request Context Filter</filter-name>
++		<url-pattern>/*</url-pattern>
++	</filter-mapping>
++	
++	<filter-mapping>
++		<filter-name>Pentaho Web Context Filter</filter-name>
++		<url-pattern>/*</url-pattern>
++	</filter-mapping>	
++	<!-- insert additional filter-mappings -->
++
++    <!--   enables session and request scoped object creation in Spring -->
++    <listener>
++        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
++    </listener>
++     
++	<!-- JPivot resources initializer -->
++	<listener>
++		<listener-class>com.tonbeller.tbutils.res.ResourcesFactoryContextListener</listener-class>
++	</listener>
++
++	<listener>
++		<listener-class>org.pentaho.platform.web.http.session.PentahoHttpSessionListener</listener-class>
++	</listener>
++  
++	<listener>
++		<listener-class>org.pentaho.platform.web.http.request.PentahoHttpRequestListener</listener-class>
++	</listener>
++
++	<!-- NEXT TWO LISTENERS ARE ORDER DEPENDENT -->
++	<listener>
++		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
++	</listener>
++
++	<listener>
++		<listener-class>org.pentaho.platform.web.http.context.SolutionContextListener</listener-class>
++	</listener>
++	<!-- END OF ORDER DEPENDENCE -->
++
++	<listener>
++		<listener-class>org.springframework.security.ui.session.HttpSessionEventPublisher</listener-class>
++	</listener>
++
++	<listener>
++		<listener-class>org.pentaho.platform.web.http.context.PentahoCacheContextListener</listener-class>
++	</listener>
++
++	<listener>
++		<listener-class>org.pentaho.platform.web.http.session.PentahoCacheSessionListener</listener-class>
++	</listener>
++	<!-- insert additional listeners -->
++
++
++
++	<!-- ********************* JPivot Servlets ******************* -->
++	<!-- jfreechart provided servlet -->
++	<servlet>
++		<servlet-name>DisplayChart</servlet-name>
++		<servlet-class>org.jfree.chart.servlet.DisplayChart</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>GetChart</servlet-name>
++		<display-name>GetChart</display-name>
++		<description>Default configuration created for servlet.</description>
++		<servlet-class>com.tonbeller.jpivot.chart.GetChart</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Print</servlet-name>
++		<display-name>Print</display-name>
++		<description>Default configuration created for servlet.</description>
++		<servlet-class>com.tonbeller.jpivot.print.PrintServlet</servlet-class>
++	</servlet>
++	<!-- ********************* End JPivot Servlets ******************* -->
++
++	<servlet>
++		<servlet-name>ViewAction</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.ViewAction</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SolutionEngineInteractivityService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.SolutionEngineInteractivityService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>content</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.UIServlet</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>ServiceAction</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.HttpWebService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>GetImage</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.GetImage</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>GetContent</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.GetContent</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SubscriptionAdmin</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.SubscriptionAdminServlet</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Xmla</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.PentahoXmlaServlet</servlet-class>
++		<init-param>
++			<param-name>DataSourcesConfig</param-name>
++			<param-value>${pentaho.solutionpath}${pentaho.olap.xmladatasources}</param-value>
++		</init-param>
++		<init-param>
++			<param-name>CharacterEncoding</param-name>
++			<param-value>UTF-8</param-value>
++		</init-param>
++	</servlet>
++
++	<servlet>
++		<servlet-name>BackgroundExecutionStatus</servlet-name>
++		<jsp-file>/jsp/BackgroundStatus.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>RepositoryFilePublisher</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.RepositoryFilePublisher</servlet-class>
++	</servlet>
++
++	<servlet>
++    	<servlet-name>GenericServlet</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.GenericServlet</servlet-class>
++	</servlet>
++
++	<servlet>
++    	<servlet-name>GwtRpcPluginProxyServlet</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.GwtRpcPluginProxyServlet</servlet-class>
++	</servlet>
++  
++    <servlet>
++      <servlet-name>PluggableUploadFileServlet</servlet-name>
++      <servlet-class>org.pentaho.platform.web.servlet.PluggableUploadFileServlet</servlet-class>
++    </servlet>
++
++
++  <servlet>
++    <servlet-name>LocalizationServlet</servlet-name>
++    <servlet-class>org.pentaho.platform.web.servlet.LocalizationServlet</servlet-class>
++  </servlet>
++
++	<servlet>
++		<servlet-name>Pivot</servlet-name>
++		<jsp-file>/jsp/Pivot.jsp</jsp-file>
++	</servlet>
++
++	<!-- Pentaho JSP Mappings -->
++	<servlet>
++		<servlet-name>Chart</servlet-name>
++		<jsp-file>/jsp/Chart.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Navigate</servlet-name>
++		<jsp-file>/jsp/Navigate.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PieChart</servlet-name>
++		<jsp-file>/jsp/PieChart.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Publish</servlet-name>
++		<jsp-file>/jsp/Publish.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Task</servlet-name>
++		<jsp-file>/jsp/Task.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SchedulerAdmin</servlet-name>
++		<jsp-file>/jsp/SchedulerAdmin.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PivotError</servlet-name>
++		<jsp-file>/jsp/PivotError.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PivotBusy</servlet-name>
++		<jsp-file>/jsp/PivotBusy.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SolutionManager</servlet-name>
++		<jsp-file>/jsp/SolutionManager.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Home</servlet-name>
++		<jsp-file>/mantle/Mantle.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PreviousHome</servlet-name>
++		<jsp-file>/jsp/OldHome.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Admin</servlet-name>
++		<jsp-file>/jsp/Admin.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>About</servlet-name>
++		<jsp-file>/jsp/About.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>InitFailure</servlet-name>
++		<jsp-file>/jsp/InitFailure.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>UserContent</servlet-name>
++		<jsp-file>/jsp/UserContent.jsp</jsp-file>
++	</servlet>
++  
++  	<!--   Temporary fix for GWT localization BISERVER-3640 -->
++    <servlet>
++      <servlet-name>BrowserLocale</servlet-name>
++      <jsp-file>/jsp/browserLocale.jsp</jsp-file>
++    </servlet>
++  	<!--   End BISERVER-3640 -->
++
++	<!-- ================================= merged servlets =================================== -->
++	<servlet>
++		<servlet-name>CacheExpirationService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.CacheExpirationService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>AdhocWebService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.AdhocWebService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>AnalysisViewService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.AnalysisViewService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>MondrianCatalogPublisher</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.MondrianCatalogPublisher</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SolutionRepositoryService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.SolutionRepositoryService</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>RepositoryTree</servlet-name>
++		<jsp-file>/jsp/RepositoryTree.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PropertiesPanel</servlet-name>
++		<jsp-file>/jsp/PropertiesPanel.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>PropertiesEditor</servlet-name>
++		<jsp-file>/jsp/PropertiesEditor.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Login</servlet-name>
++		<jsp-file>/jsp/PUCLogin.jsp</jsp-file>
++		<init-param>
++			<param-name>send401List</param-name>
++			<param-value>AdhocWebService,AnalysisViewService,MondrianCatalogPublisher, SchedulerAdminService, SubscriptionAdminService, PublishService, ResetRepositoryService, ServiceActionService,SolutionRepositoryService,gwtrpc,mantle/images/spacer.gif</param-value>
++			<description>List of things to throw a 401 to when seen in the login</description>
++		</init-param>
++	</servlet>
++
++	<servlet>
++		<servlet-name>GetResource</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.GetResource</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>ResetRepository</servlet-name>
++		<jsp-file>/jsp/ResetRepository.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>MantleService</servlet-name>
++		<servlet-class>org.pentaho.mantle.server.MantleServlet</servlet-class>
++	</servlet>
++
++	<servlet>
++		<servlet-name>MantleLoginService</servlet-name>
++		<servlet-class>org.pentaho.mantle.login.server.MantleLoginServlet</servlet-class>
++	</servlet>
++
++  	<servlet>
++		<servlet-name>UploadService</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.UploadFileServlet</servlet-class>
++	</servlet>
++	
++	<!-- [BEGIN SAMPLE SERVLETS] -->
++	<servlet>
++		<servlet-name>UpdateSampleEmails</servlet-name>
++		<jsp-file>/jsp/UpdateSampleEmails.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>Widgets</servlet-name>
++		<jsp-file>/jsp/Widgets.jsp</jsp-file>
++	</servlet>
++	
++	<servlet>
++		<servlet-name>SampleDashboard</servlet-name>
++		<jsp-file>/jsp/SampleDashboard.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>ChartSamplesDashboard</servlet-name>
++		<jsp-file>/jsp/ChartSamplesDashboard.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SampleDrill</servlet-name>
++		<jsp-file>/jsp/SampleDrill.jsp</jsp-file>
++	</servlet>
++
++	<servlet>
++		<servlet-name>SWDashboard</servlet-name>
++		<jsp-file>/jsp/SWDashboard.jsp</jsp-file>
++	</servlet>
++		
++	<servlet>
++		<servlet-name>Map</servlet-name>
++		<jsp-file>/jsp/Map.jsp</jsp-file>
++	</servlet>	
++	
++	<servlet>
++		<servlet-name>ThemeServlet</servlet-name>
++		<servlet-class>org.pentaho.platform.web.servlet.ThemeServlet</servlet-class>
++	</servlet>
++
++
++
++	<!-- [END SAMPLE SERVLETS] -->
++
++  <!-- insert additional servlets -->
++
++  	<servlet-mapping>
++    	<servlet-name>UploadService</servlet-name>
++    	<url-pattern>/UploadService</url-pattern>
++  	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>MantleService</servlet-name>
++		<url-pattern>/mantle/MantleService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>MantleLoginService</servlet-name>
++		<url-pattern>/mantleLogin/MantleLoginService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>MantleLoginService</servlet-name>
++		<url-pattern>/mantle/MantleLoginService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Xmla</servlet-name>
++		<url-pattern>/Xmla</url-pattern>
++	</servlet-mapping>
++
++	<!-- ********************* End JPivot Mappings ******************* -->
++	<servlet-mapping>
++		<servlet-name>DisplayChart</servlet-name>
++		<url-pattern>/DisplayChart</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Print</servlet-name>
++		<url-pattern>/Print</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>GetChart</servlet-name>
++		<url-pattern>/GetChart</url-pattern>
++	</servlet-mapping>
++	<!-- ********************* End JPivot Servlet Mappings ******************* -->
++
++	<servlet-mapping>
++		<servlet-name>GenericServlet</servlet-name>
++		<url-pattern>/content/*</url-pattern>
++	</servlet-mapping>
++  
++	<servlet-mapping>
++		<servlet-name>GwtRpcPluginProxyServlet</servlet-name>
++		<url-pattern>/gwtrpc/*</url-pattern>
++	</servlet-mapping>
++  
++	<servlet-mapping>
++		<servlet-name>PluggableUploadFileServlet</servlet-name>
++		<url-pattern>/upload/*</url-pattern>
++	</servlet-mapping>
++
++  <servlet-mapping>
++    <servlet-name>LocalizationServlet</servlet-name>
++    <url-pattern>/i18n</url-pattern>
++  </servlet-mapping>
++
++	<!-- Pentaho JSPs -->
++	<servlet-mapping>
++		<servlet-name>Chart</servlet-name>
++		<url-pattern>/Chart</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Navigate</servlet-name>
++		<url-pattern>/Navigate</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PieChart</servlet-name>
++		<url-pattern>/PieChart</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Publish</servlet-name>
++		<url-pattern>/Publish</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Publish</servlet-name>
++		<url-pattern>/PublishService</url-pattern>
++	</servlet-mapping>
++	
++	<servlet-mapping>
++		<servlet-name>SchedulerAdmin</servlet-name>
++		<url-pattern>/SchedulerAdmin</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SchedulerAdmin</servlet-name>
++		<url-pattern>/SchedulerAdminService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Task</servlet-name>
++		<url-pattern>/Task</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SolutionManager</servlet-name>
++		<url-pattern>/SolutionManager</url-pattern>
++	</servlet-mapping>
++
++	<!-- Pentaho Servlets -->
++
++	<servlet-mapping>
++		<servlet-name>ViewAction</servlet-name>
++		<url-pattern>/ViewAction</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SolutionEngineInteractivityService</servlet-name>
++		<url-pattern>/SolutionEngineInteractivityService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>content</servlet-name>
++		<url-pattern>/content</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>ServiceAction</servlet-name>
++		<url-pattern>/ServiceAction</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>ServiceAction</servlet-name>
++		<url-pattern>/ServiceActionService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>GetImage</servlet-name>
++		<url-pattern>/getImage</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>GetContent</servlet-name>
++		<url-pattern>/GetContent</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>BackgroundExecutionStatus</servlet-name>
++		<url-pattern>/BackgroundExecutionStatus</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>RepositoryFilePublisher</servlet-name>
++		<url-pattern>/RepositoryFilePublisher</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Pivot</servlet-name>
++		<url-pattern>/Pivot</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PivotError</servlet-name>
++		<url-pattern>/PivotError</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PivotBusy</servlet-name>
++		<url-pattern>/PivotBusy</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Home</servlet-name>
++		<url-pattern>/Home</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PreviousHome</servlet-name>
++		<url-pattern>/PreviousHome</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Admin</servlet-name>
++		<url-pattern>/Admin</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>About</servlet-name>
++		<url-pattern>/About</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>InitFailure</servlet-name>
++		<url-pattern>/InitFailure</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>UserContent</servlet-name>
++		<url-pattern>/UserContent</url-pattern>
++	</servlet-mapping>
++
++  	<!--   Temporary fix for GWT localization BISERVER-3640 -->
++    <servlet-mapping>
++      <servlet-name>BrowserLocale</servlet-name>
++      <url-pattern>/js/browserLocale.js</url-pattern>
++    </servlet-mapping>
++  	<!--   End BISERVER-3640 -->
++    
++<!-- =============================== merged servlet-mappings ============================= -->
++	<servlet-mapping>
++		<servlet-name>RepositoryTree</servlet-name>
++		<url-pattern>/RepositoryTree</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PropertiesPanel</servlet-name>
++		<url-pattern>/PropertiesPanel</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>PropertiesEditor</servlet-name>
++		<url-pattern>/PropertiesEditor</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SubscriptionAdmin</servlet-name>
++		<url-pattern>/SubscriptionAdmin</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SubscriptionAdmin</servlet-name>
++		<url-pattern>/SubscriptionAdminService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Login</servlet-name>
++		<url-pattern>/Login</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>GetResource</servlet-name>
++		<url-pattern>/GetResource</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>ResetRepository</servlet-name>
++		<url-pattern>/ResetRepository</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>ResetRepository</servlet-name>
++		<url-pattern>/ResetRepositoryService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>CacheExpirationService</servlet-name>
++		<url-pattern>/CacheExpirationService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>AdhocWebService</servlet-name>
++		<url-pattern>/AdhocWebService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>AnalysisViewService</servlet-name>
++		<url-pattern>/AnalysisViewService</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>MondrianCatalogPublisher</servlet-name>
++		<url-pattern>/MondrianCatalogPublisher</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SolutionRepositoryService</servlet-name>
++		<url-pattern>/SolutionRepositoryService</url-pattern>
++	</servlet-mapping>
++
++    <!-- [BEGIN SAMPLE SERVLET MAPPINGS] -->
++	<servlet-mapping>
++		<servlet-name>UpdateSampleEmails</servlet-name>
++		<url-pattern>/UpdateSampleEmails</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>Widgets</servlet-name>
++		<url-pattern>/Widgets</url-pattern>
++	</servlet-mapping>
++	    
++	<servlet-mapping>
++		<servlet-name>SampleDashboard</servlet-name>
++		<url-pattern>/SampleDashboard</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>ChartSamplesDashboard</servlet-name>
++		<url-pattern>/ChartSamplesDashboard</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SampleDrill</servlet-name>
++		<url-pattern>/SampleDrill</url-pattern>
++	</servlet-mapping>
++
++	<servlet-mapping>
++		<servlet-name>SWDashboard</servlet-name>
++		<url-pattern>/SWDashboard</url-pattern>
++	</servlet-mapping>	
++	
++	<servlet-mapping>
++		<servlet-name>Map</servlet-name>
++		<url-pattern>/Map</url-pattern>
++	</servlet-mapping>	
++
++	<servlet-mapping>
++		<servlet-name>ThemeServlet</servlet-name>
++		<url-pattern>/js/themes.js</url-pattern>
++	</servlet-mapping>
++    <!-- [END SAMPLE SERVLET MAPPINGS] -->
++
++	<!-- insert additional servlet mappings -->
++	<session-config>
++		<session-timeout>30</session-timeout>
++	</session-config>
++
++  <mime-mapping>
++    <extension>properties</extension>
++    <mime-type>text/plain</mime-type>
++  </mime-mapping>
++
++  <mime-mapping>
++    <extension>js</extension>
++    <mime-type>text/javascript</mime-type>
++  </mime-mapping>
++
++	<welcome-file-list>
++		<welcome-file>index.jsp</welcome-file>
++	</welcome-file-list>
++
++	<taglib>
++		<taglib-uri>http://www.tonbeller.com/wcf</taglib-uri>
++		<taglib-location>/WEB-INF/wcf/wcf-tags.tld</taglib-location>
++	</taglib>
++
++	<taglib>
++		<taglib-uri>http://www.tonbeller.com/jpivot</taglib-uri>
++		<taglib-location>/WEB-INF/jpivot/jpivot-tags.tld</taglib-location>
++	</taglib>
++
++	<!-- insert additional tag libs -->
++
++	<resource-ref>
++		<description>Quartz Connection</description>
++		<res-ref-name>jdbc/Quartz</res-ref-name>
++		<res-type>javax.sql.DataSource</res-type>
++		<res-auth>Container</res-auth>
++	</resource-ref>
++
++	<resource-ref>
++		<description>Hibernate</description>
++		<res-ref-name>jdbc/Hibernate</res-ref-name>
++		<res-type>javax.sql.DataSource</res-type>
++		<res-auth>Container</res-auth>
++	</resource-ref>
++
++	<!-- insert additional resource-refs -->
++
++	<security-constraint>
++		<display-name>Default JSP Security Constraints</display-name>
++		<web-resource-collection>
++			<web-resource-name>Portlet Directory</web-resource-name>
++			<url-pattern>/jsp/*</url-pattern>
++			<http-method>GET</http-method>
++			<http-method>POST</http-method>
++		</web-resource-collection>
++		<auth-constraint>
++			<role-name>PENTAHO_ADMIN</role-name>
++		</auth-constraint>
++		<user-data-constraint>
++			<transport-guarantee>NONE</transport-guarantee>
++		</user-data-constraint>
++	</security-constraint>
++
++</web-app>
+-- 
+1.7.9.5
+

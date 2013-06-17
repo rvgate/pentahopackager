@@ -1,0 +1,31 @@
+From 71bc90d240450a86b25494d298aec3709c368a3d Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Sun, 2 Jun 2013 18:28:42 +0200
+Subject: [PATCH 5/9] Disabled evaluation login
+
+---
+ pentaho-solutions/system/pentaho.xml |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/pentaho-solutions/system/pentaho.xml b/pentaho-solutions/system/pentaho.xml
+index 3c3a1d2..aecd135 100644
+--- a/pentaho-solutions/system/pentaho.xml
++++ b/pentaho-solutions/system/pentaho.xml
+@@ -12,12 +12,12 @@
+     sample pentaho users (joe,suzy,pat,tiffany) in the login dialog which is shown when a user attemps
+     to login to the Pentaho User Console (PUC).
+     -->
+-    <login-show-users-list>true</login-show-users-list> 
++    <login-show-users-list>false</login-show-users-list> 
+         
+     <!-- 
+       If true, show hint about sample users. Ultimately, should replace login-show-users-list.
+     -->
+-    <login-show-sample-users-hint>true</login-show-sample-users-hint>
++    <login-show-sample-users-hint>false</login-show-sample-users-hint>
+ 
+     <!--
+ 	This is the URL to the user guide
+-- 
+1.7.9.5
+

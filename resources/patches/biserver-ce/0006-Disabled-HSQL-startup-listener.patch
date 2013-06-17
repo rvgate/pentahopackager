@@ -1,0 +1,29 @@
+From 720d015c96a838c0b7269312bc38171a3493c296 Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Mon, 3 Jun 2013 01:10:17 +0200
+Subject: [PATCH 6/9] Disabled HSQL startup listener
+
+---
+ tomcat/webapps/pentaho/WEB-INF/web.xml |    6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/tomcat/webapps/pentaho/WEB-INF/web.xml b/tomcat/webapps/pentaho/WEB-INF/web.xml
+index 5fe7347..601adde 100644
+--- a/tomcat/webapps/pentaho/WEB-INF/web.xml
++++ b/tomcat/webapps/pentaho/WEB-INF/web.xml
+@@ -203,12 +203,6 @@
+     <listener>
+         <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+     </listener>
+-
+-    <!-- [BEGIN HSQLDB STARTER] -->
+-    <listener>
+-        <listener-class>org.pentaho.platform.web.http.context.HsqldbStartupListener</listener-class>
+-    </listener>
+-    <!-- [END HSQLDB STARTER] -->
+      
+ 	<!-- JPivot resources initializer -->
+ 	<listener>
+-- 
+1.7.9.5
+

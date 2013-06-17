@@ -1,0 +1,184 @@
+From 61f28cc17af5c5dba79af513bfd74635ae4f98da Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Sun, 2 Jun 2013 18:12:52 +0200
+Subject: [PATCH 2/9] Converted to MySQL
+
+---
+ ...ionContext-spring-security-hibernate.properties |   10 ++--
+ .../applicationContext-spring-security-jdbc.xml    |   10 ++--
+ .../system/hibernate/hibernate-settings.xml        |   56 ++++++++++----------
+ .../system/hibernate/mysql5.hibernate.cfg.xml      |    6 +--
+ tomcat/webapps/pentaho/META-INF/context.xml        |   36 ++++++++-----
+ 5 files changed, 65 insertions(+), 53 deletions(-)
+
+diff --git a/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties b/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties
+index 608ff64..c8cd8cf 100644
+--- a/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties
++++ b/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties
+@@ -1,5 +1,5 @@
+-jdbc.driver=org.hsqldb.jdbcDriver
+-jdbc.url=jdbc:hsqldb:hsql://localhost:9001/hibernate
+-jdbc.username=hibuser
+-jdbc.password=password
+-hibernate.dialect=org.hibernate.dialect.HSQLDialect
+\ No newline at end of file
++jdbc.driver=com.mysql.jdbc.Driver
++jdbc.url=jdbc:mysql://localhost:3306/HIBERNATE_DB
++jdbc.username=MYSQL_PENTAHO_USER
++jdbc.password=MYSQL_PENTAHO_PASSWORD
++hibernate.dialect=org.hibernate.dialect.MySQLDialect
+diff --git a/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml b/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml
+index e3683b8..f7739e2 100644
+--- a/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml
++++ b/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml
+@@ -37,15 +37,15 @@
+ 	<!--  This is only for Hypersonic. Please update this section for any other database you are using -->
+ 	<bean id="dataSource"
+ 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+-		<property name="driverClassName" value="org.hsqldb.jdbcDriver" />
++		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+ 		<property name="url"
+-			value="jdbc:hsqldb:hsql://localhost:9001/hibernate" />
+-		<property name="username" value="hibuser" />
+-		<property name="password" value="password" />
++			value="jdbc:mysql://localhost:3306/HIBERNATE_DB" />
++		<property name="username" value="MYSQL_PENTAHO_USER" />
++		<property name="password" value="MYSQL_PENTAHO_PASSWORD" />
+ 	</bean>
+ 
+   <bean id="passwordEncoder"
+     class="org.springframework.security.providers.encoding.PlaintextPasswordEncoder" />
+  
+ 
+-</beans>
+\ No newline at end of file
++</beans>
+diff --git a/pentaho-solutions/system/hibernate/hibernate-settings.xml b/pentaho-solutions/system/hibernate/hibernate-settings.xml
+index 354a1ae..f773d5b 100644
+--- a/pentaho-solutions/system/hibernate/hibernate-settings.xml
++++ b/pentaho-solutions/system/hibernate/hibernate-settings.xml
+@@ -1,31 +1,31 @@
+ <?xml version='1.0' encoding='utf-8'?>
+-<settings>
+-
+-  <!--
+-  * This setting allows the deployment to specify where to find the 
+-  * database-specific hibernate configuration. The samples supplied
+-  * include the following:
+-  * 
+-  * system/hibernate/hsql.hibernate.cfg.xml
+-  * system/hibernate/mysql5.hibernate.cfg.xml
+-  * system/hibernate/postgresql.hibernate.cfg.xml
+-  * system/hibernate/oracle10g.hibernate.cfg.xml
+-  *
+-  -->
+-    <config-file>system/hibernate/hsql.hibernate.cfg.xml</config-file>
+-
+-  <!--
+-  *
+-  * managed should be set to true if running the BI Platform
+-  * in a managed environment (like JBoss, Orion, etc). In this configuration,
+-  * you should specify another location for the hibernate.cfg.xml (see below)
+-  * instead of simply using the default one provided. This setting essentially
+-  * tells the HibernateUtil class to use JNDI to locate the factory class for
+-  * getting sessions. This allows the platform to use Hibernate across boundaries
+-  * in message beans (for example).
+-  *
+-    <managed>false</managed>
+-  -->
+-
++<settings>
++
++  <!--
++  * This setting allows the deployment to specify where to find the 
++  * database-specific hibernate configuration. The samples supplied
++  * include the following:
++  * 
++  * system/hibernate/hsql.hibernate.cfg.xml
++  * system/hibernate/mysql5.hibernate.cfg.xml
++  * system/hibernate/postgresql.hibernate.cfg.xml
++  * system/hibernate/oracle10g.hibernate.cfg.xml
++  *
++  -->
++    <config-file>system/hibernate/mysql5.hibernate.cfg.xml</config-file>
++
++  <!--
++  *
++  * managed should be set to true if running the BI Platform
++  * in a managed environment (like JBoss, Orion, etc). In this configuration,
++  * you should specify another location for the hibernate.cfg.xml (see below)
++  * instead of simply using the default one provided. This setting essentially
++  * tells the HibernateUtil class to use JNDI to locate the factory class for
++  * getting sessions. This allows the platform to use Hibernate across boundaries
++  * in message beans (for example).
++  *
++    <managed>false</managed>
++  -->
++
+     <managed>false</managed>
+ </settings>
+diff --git a/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml b/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml
+index c9fbb5d..597603b 100644
+--- a/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml
++++ b/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml
+@@ -12,10 +12,10 @@
+   
+     <!--  MySQL Configuration -->
+     <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+-    <property name="connection.url">jdbc:mysql://localhost:3306/hibernate</property>
++    <property name="connection.url">jdbc:mysql://localhost:3306/HIBERNATE_DB</property>
+     <property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+-    <property name="connection.username">hibuser</property>
+-    <property name="connection.password">password</property>
++    <property name="connection.username">MYSQL_PENTAHO_USER</property>
++    <property name="connection.password">MYSQL_PENTAHO_PASSWORD</property>
+     <property name="connection.pool_size">10</property>
+     <property name="show_sql">false</property>
+     <property name="hibernate.jdbc.use_streams_for_binary">true</property>
+diff --git a/tomcat/webapps/pentaho/META-INF/context.xml b/tomcat/webapps/pentaho/META-INF/context.xml
+index c5fca1e..addfa5b 100644
+--- a/tomcat/webapps/pentaho/META-INF/context.xml
++++ b/tomcat/webapps/pentaho/META-INF/context.xml
+@@ -1,14 +1,26 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <Context path="/pentaho" docbase="webapps/pentaho/">
+-	<Resource name="jdbc/Hibernate" auth="Container" type="javax.sql.DataSource"
+-		factory="org.apache.commons.dbcp.BasicDataSourceFactory" maxActive="20" maxIdle="5"
+-		maxWait="10000" username="hibuser" password="password"
+-		driverClassName="org.hsqldb.jdbcDriver" url="jdbc:hsqldb:hsql://localhost/hibernate"
+-		validationQuery="select count(*) from INFORMATION_SCHEMA.SYSTEM_SEQUENCES" />
+-		
+-	<Resource name="jdbc/Quartz" auth="Container" type="javax.sql.DataSource"
+-		factory="org.apache.commons.dbcp.BasicDataSourceFactory" maxActive="20" maxIdle="5"
+-		maxWait="10000" username="pentaho_user" password="password"
+-		driverClassName="org.hsqldb.jdbcDriver" url="jdbc:hsqldb:hsql://localhost/quartz"
+-		validationQuery="select count(*) from INFORMATION_SCHEMA.SYSTEM_SEQUENCES"/>
+-</Context>
+\ No newline at end of file
++    <Resource name="jdbc/Hibernate" auth="Container" 
++        type="javax.sql.DataSource"
++        factory="org.apache.commons.dbcp.BasicDataSourceFactory"
++        maxActive="20"
++        maxIdle="5"
++        maxWait="10000"
++        username="MYSQL_PENTAHO_USER"
++        password="MYSQL_PENTAHO_PASSWORD"
++        driverClassName="com.mysql.jdbc.Driver"
++        url="jdbc:mysql://localhost:3306/HIBERNATE_DB"
++        validationQuery="select 1" />
++
++    <Resource name="jdbc/Quartz" auth="Container" 
++        type="javax.sql.DataSource" 
++        factory="org.apache.commons.dbcp.BasicDataSourceFactory" 
++        maxActive="20"
++        maxIdle="5"
++        maxWait="10000"
++        username="MYSQL_PENTAHO_USER"
++        password="MYSQL_PENTAHO_PASSWORD"
++        driverClassName="com.mysql.jdbc.Driver"
++        url="jdbc:mysql://localhost:3306/QUARTZ_DB"
++        validationQuery="select 1" />
++</Context>
+-- 
+1.7.9.5
+

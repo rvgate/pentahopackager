@@ -1,0 +1,10 @@
+Package: lswpentaho
+Version: 1.0-1
+Section: base
+Priority: optional
+Architecture: all
+Depends: openjdk-6-jre, debconf (>= 0.2.17)
+Maintainer: Rene van Aerle <r.vanaerle@leaseweb.com>
+Description: Pentaho Business Intelligence
+ Installs the Pentaho Business Intelligence platform including
+ biserver-ce, administration-console and data-integration

@@ -1,0 +1,40 @@
+From 6192d2cd091103c0997fedb13595401efea70163 Mon Sep 17 00:00:00 2001
+From: Rene van Aerle <info@rvgate.nl>
+Date: Wed, 5 Jun 2013 15:11:26 +0200
+Subject: [PATCH] Added original config files
+
+---
+ resource/config/console.xml.orig      |   12 ++++++++++++
+ resource/config/login.properties.orig |    1 +
+ 2 files changed, 13 insertions(+)
+ create mode 100644 resource/config/console.xml.orig
+ create mode 100644 resource/config/login.properties.orig
+
+diff --git a/resource/config/console.xml.orig b/resource/config/console.xml.orig
+new file mode 100644
+index 0000000..eb6e898
+--- /dev/null
++++ b/resource/config/console.xml.orig
+@@ -0,0 +1,12 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<console> 
++  <solution-path></solution-path>
++  <war-path></war-path>
++  <platform-username>joe</platform-username>  
++  <biserver-status-check-period-millis>30000</biserver-status-check-period-millis>  
++  <homepage-url>http://www.pentaho.com/console_home</homepage-url>  
++  <homepage-timeout-millis>15000</homepage-timeout-millis>  
++  <!-- comma separated list of roles (no spaces) -->  
++  <default-roles>Authenticated</default-roles>
++  <default-server-dir>biserver-ce</default-server-dir>
++</console>
+diff --git a/resource/config/login.properties.orig b/resource/config/login.properties.orig
+new file mode 100644
+index 0000000..8fe389f
+--- /dev/null
++++ b/resource/config/login.properties.orig
+@@ -0,0 +1 @@
++admin: OBF:1v2j1uum1xtv1zej1zer1xtn1uvk1v1v,admin
+-- 
+1.7.9.5
+

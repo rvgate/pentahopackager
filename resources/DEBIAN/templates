@@ -1,0 +1,61 @@
+Template: lswpentaho/domain
+Type: string
+Default: pentaho.example.com
+Description: What domain is used for this deployment?
+ This domain is used to deploy the pentaho biserver-ce and
+ will configure the administration-console to only be accessed
+ from this resolved IP.
+
+Template: lswpentaho/port
+Type: string
+Default: 8080
+Description: What port number should be used for this deployment?
+ The biserver-ce runs on tomcat using port 8080 by default
+ changing this value will configure tomcat with the new port.
+
+Template: lswpentaho/mysqlroot
+Type: password
+Description: What is the root password of MySQL?
+ Pentaho requires two databases. It will create
+ a pentaho user and create the required user, databases, tables
+ and privileges. Please provide the root password so these actions
+ can be performed.
+
+Template: lswpentaho/mysql-pentaho-user
+Type: string
+Default: pentaho_user
+Description: What MySQL user should be used for pentaho?
+ The MySQL user to use for the Pentaho solution.
+
+Template: lswpentaho/mysql-pentaho-password
+Type: password
+Description: What MySQL password should be used for pentaho?
+ The MySQL password to use for the Pentaho solution.
+
+Template: lswpentaho/adminconsole-username
+Type: string
+Default: admin
+Description: What username should be used for the administration-console?
+ Pentaho comes with a seperate administration console to manage
+ the biserver-ce. It uses a seperate username/password combination
+ that overrules the biserver-ce authentication.
+
+Template: lswpentaho/adminconsole-password
+Type: password
+Description: What password should be used for the administration-console?
+ Pentaho comes with a seperate administration console to manage
+ the biserver-ce. It uses a seperate username/password combination
+ that overrules the biserver-ce authentication.
+
+Template: lswpentaho/adminconsole-platform-username
+Type: string
+Default: admin
+Description: What platform user should the administration console use?
+ When logged in at the administration-console, any action will be performed
+ by an existing user on the biserver-ce platform.
+
+Template: lswpentaho/publish-password
+Type: password
+Description: What publishing password should be used?
+ Pentaho allows uploading reports directly from the report designer.
+ For security reasons the user will need to provide an additional publishing password.

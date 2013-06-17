@@ -1,0 +1,137 @@
+#!/bin/sh
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Fetching configuration from debconf
+db_get lswpentaho/domain
+DOMAIN=$RET
+
+db_get lswpentaho/port
+PORT=$RET
+
+db_get lswpentaho/mysqlroot
+MYSQL_PASSWORD=$RET
+
+db_get lswpentaho/mysql-pentaho-user
+MYSQL_PENTAHO_USER=$RET
+
+db_get lswpentaho/mysql-pentaho-password
+MYSQL_PENTAHO_PASSWORD=$RET
+
+db_get lswpentaho/adminconsole-username
+ADMINCONSOLE_USERNAME=$RET
+
+db_get lswpentaho/adminconsole-password
+ADMINCONSOLE_PASSWORD=$RET
+
+db_get lswpentaho/adminconsole-platform-username
+PLATFORM_USERNAME=$RET
+
+db_get lswpentaho/publish-password
+PUBLISH_PASSWORD=$RET
+
+# Fetch additional settings
+MYSQL_USER="root"
+MYSQL_PREFIX="pentaho_"
+QUALIFIED_URL="http://$DOMAIN:$PORT/"
+
+# Setting directories
+BISERVER_ROOT="/opt/pentaho/biserver-ce"
+ADMINCONSOLE_ROOT="/opt/pentaho/administration-console"
+
+
+# ==========================================================
+# RESTORE DEFAULTS
+echo "Restoring defaults"
+# ==========================================================
+cp "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties.orig" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties"
+cp "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml.orig" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml"
+cp "$BISERVER_ROOT/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml.orig" "$BISERVER_ROOT/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml"
+cp "$BISERVER_ROOT/pentaho-solutions/system/publisher_config.xml.orig" "$BISERVER_ROOT/pentaho-solutions/system/publisher_config.xml"
+cp "$BISERVER_ROOT/pentaho-solutions/system/quartz/quartz.properties.orig" "$BISERVER_ROOT/pentaho-solutions/system/quartz/quartz.properties"
+cp "$BISERVER_ROOT/tomcat/conf/server.xml.orig" "$BISERVER_ROOT/tomcat/conf/server.xml"
+cp "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml.orig" "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml"
+cp "$BISERVER_ROOT/tomcat/webapps/pentaho/WEB-INF/web.xml.orig" "$BISERVER_ROOT/tomcat/webapps/pentaho/WEB-INF/web.xml"
+cp "$ADMINCONSOLE_ROOT/resource/config/console.xml.orig" "$ADMINCONSOLE_ROOT/resource/config/console.xml"
+
+# ==========================================================
+# INSTALLING DATABASE
+echo "Setting up database"
+# ==========================================================
+echo "Setting up databases"
+echo "Creating database ${MYSQL_PREFIX}hibernate"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "create database ${MYSQL_PREFIX}hibernate"
+echo "Creating database ${MYSQL_PREFIX}quartz"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "create database ${MYSQL_PREFIX}quartz"
+echo "Creating user '$MYSQL_PENTAHO_USER'@'localhost'"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "create user '$MYSQL_PENTAHO_USER'@'localhost' identified by '$MYSQL_PENTAHO_PASSWORD'"
+echo "Setting permissions"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "grant all on ${MYSQL_PREFIX}hibernate.* to '$MYSQL_PENTAHO_USER'@'localhost'"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "grant all on ${MYSQL_PREFIX}quartz.* to '$MYSQL_PENTAHO_USER'@'localhost'"
+echo "Importing default repository database"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD ${MYSQL_PREFIX}hibernate < "$BISERVER_ROOT/mysql/1_create_repository_mysql.sql"
+echo "Importing default quartz database"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD ${MYSQL_PREFIX}quartz < "$BISERVER_ROOT/mysql/2_create_quartz_mysql.sql"
+# ==========================================================
+
+# ==========================================================
+# CONFIGURE BI-SERVER
+echo "Configuring biserver-ce"
+# ==========================================================
+# Set server address
+echo "Setting server address to $QUALIFIED_URL"
+sed -i "s|http://localhost:8080/|$QUALIFIED_URL|" "$BISERVER_ROOT/tomcat/webapps/pentaho/WEB-INF/web.xml"
+# Set Tomcat port
+echo "Setting Tomcat port to $PORT"
+sed -i "s|port=\"8080\"|port=\"$PORT\"|" "$BISERVER_ROOT/tomcat/conf/server.xml"
+# Set publish password
+echo "Setting publish password to $PUBLISH_PASSWORD"
+sed -i "s|\(<publisher-password>\)|\1$PUBLISH_PASSWORD|" "$BISERVER_ROOT/pentaho-solutions/system/publisher_config.xml"
+
+# ==========================================================
+# CONFIGURE BISERVER TO USE MYSQL
+# ==========================================================
+echo "Setting hibernate connection"
+sed -i "s|HIBERNATE_DB|${MYSQL_PREFIX}hibernate|" "$BISERVER_ROOT/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml"
+sed -i "s|MYSQL_PENTAHO_USER|$MYSQL_PENTAHO_USER|" "$BISERVER_ROOT/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml"
+sed -i "s|MYSQL_PENTAHO_PASSWORD|$MYSQL_PENTAHO_PASSWORD|" "$BISERVER_ROOT/pentaho-solutions/system/hibernate/mysql5.hibernate.cfg.xml"
+
+echo "Setting quartz connection"
+sed -i "s|QUARTZ_DB|${MYSQL_PREFIX}quartz|" "$BISERVER_ROOT/pentaho-solutions/system/quartz/quartz.properties"
+sed -i "s|MYSQL_PENTAHO_USER|$MYSQL_PENTAHO_USER|" "$BISERVER_ROOT/pentaho-solutions/system/quartz/quartz.properties"
+sed -i "s|MYSQL_PENTAHO_PASSWORD|$MYSQL_PENTAHO_PASSWORD|" "$BISERVER_ROOT/pentaho-solutions/system/quartz/quartz.properties"
+
+echo "Setting hypersonic connection"
+sed -i "s|HIBERNATE_DB|${MYSQL_PREFIX}hibernate|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml"
+sed -i "s|MYSQL_PENTAHO_USER|$MYSQL_PENTAHO_USER|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml"
+sed -i "s|MYSQL_PENTAHO_PASSWORD|$MYSQL_PENTAHO_PASSWORD|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-jdbc.xml"
+
+echo "Configuring MySQL references"
+sed -i "s|MYSQL_PENTAHO_USER|$MYSQL_PENTAHO_USER|" "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml"
+sed -i "s|MYSQL_PENTAHO_PASSWORD|$MYSQL_PENTAHO_PASSWORD|" "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml"
+sed -i "s|HIBERNATE_DB|${MYSQL_PREFIX}hibernate|" "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml"
+sed -i "s|QUARTZ_DB|${MYSQL_PREFIX}quartz|" "$BISERVER_ROOT/tomcat/webapps/pentaho/META-INF/context.xml"
+
+sed -i "s|MYSQL_PENTAHO_USER|$MYSQL_PENTAHO_USER|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties"
+sed -i "s|MYSQL_PENTAHO_PASSWORD|$MYSQL_PENTAHO_PASSWORD|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties"
+sed -i "s|HIBERNATE_DB|${MYSQL_PREFIX}hibernate|" "$BISERVER_ROOT/pentaho-solutions/system/applicationContext-spring-security-hibernate.properties"
+
+# ==========================================================
+# CONFIGURE ADMINISTRATION-CONSOLE
+echo "Configuring administration-console"
+# ==========================================================
+# Set solution path for administration console
+echo "Setting solution path $BISERVER_ROOT/pentaho-solutions"
+sed -i "s|\(<solution-path>\)|\1$BISERVER_ROOT/pentaho-solutions|" "$ADMINCONSOLE_ROOT/resource/config/console.xml"
+echo "Setting war path to $BISERVER_ROOT/tomcat/webapps/pentaho"
+sed -i "s|\(<war-path>\)|\1$BISERVER_ROOT/tomcat/webapps/pentaho|" "$ADMINCONSOLE_ROOT/resource/config/console.xml"
+# Set administration console platform username
+echo "Setting platform username to $PLATFORM_USERNAME"
+sed -i "s|joe|$PLATFORM_USERNAME|" "$ADMINCONSOLE_ROOT/resource/config/console.xml"
+# Set administration console login
+echo "Setting administration-console login to $ADMINCONSOLE_USERNAME"
+cd $ADMINCONSOLE_ROOT
+OBFSTRING=$(java -cp lib/jetty-6.1.2.jar:lib/jetty-util-6.1.9.jar org.mortbay.jetty.security.Password $ADMINCONSOLE_USERNAME $ADMINCONSOLE_PASSWORD 2>&1 | grep OBF)
+echo "$ADMINCONSOLE_USERNAME: $OBFSTRING,$PLATFORM_USERNAME" > "$ADMINCONSOLE_ROOT/resource/config/login.properties"
+

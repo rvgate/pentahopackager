@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Fetching configuration from debconf
+db_get lswpentaho/domain
+DOMAIN=$RET
+
+db_get lswpentaho/port
+PORT=$RET
+
+db_get lswpentaho/mysqlroot
+MYSQL_PASSWORD=$RET
+
+db_get lswpentaho/mysql-pentaho-user
+MYSQL_PENTAHO_USER=$RET
+
+db_get lswpentaho/mysql-pentaho-password
+MYSQL_PENTAHO_PASSWORD=$RET
+
+db_get lswpentaho/adminconsole-username
+ADMINCONSOLE_USERNAME=$RET
+
+db_get lswpentaho/adminconsole-password
+ADMINCONSOLE_PASSWORD=$RET
+
+db_get lswpentaho/adminconsole-platform-username
+PLATFORM_USERNAME=$RET
+
+db_get lswpentaho/publish-password
+PUBLISH_PASSWORD=$RET
+
+# Fetch additional settings
+IP=`python -c 'import socket;print socket.gethostbyname("'"$DOMAIN"'")'`
+MYSQL_USER="root"
+MYSQL_PREFIX="pentaho_"
+
+# Setting directories
+BISERVER_ROOT="/opt/pentaho/biserver-ce"
+ADMINCONSOLE_ROOT="/opt/pentaho/administration-console"
+
+# ==========================================================
+# Reset database
+echo "Restoring database"
+# ==========================================================
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "revoke all privileges, grant option from '$MYSQL_PENTAHO_USER'@'localhost'"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "drop user '$MYSQL_PENTAHO_USER'@'localhost'"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "drop database ${MYSQL_PREFIX}hibernate"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "drop database ${MYSQL_PREFIX}quartz"
+mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e "flush privileges"
+# ==========================================================
+

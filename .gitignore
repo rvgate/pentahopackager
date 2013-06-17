@@ -1,0 +1,6 @@
+resources/patched/*
+lswpentaho-*/
+*.tar.gz
+biserver-ce/
+administration-console/
+data-integration/
